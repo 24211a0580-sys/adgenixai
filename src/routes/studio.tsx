@@ -1,8 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SiteNav } from "@/components/site-nav";
+import { useAuth } from "@/hooks/useAuth";
 import { generateCampaign, type Variant } from "@/lib/campaign.functions";
 
 export const Route = createFileRoute("/studio")({
@@ -180,11 +181,18 @@ function Studio() {
   const [persona, setPersona] = useState(PERSONAS[1]!);
   const [objective, setObjective] = useState(OBJECTIVES[0]!);
   const [channel, setChannel] = useState(CHANNELS[0]!);
+  const [count, setCount] = useState(3);
   const [variants, setVariants] = useState<Variant[]>([]);
+  const { session, loading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && !session) navigate({ to: "/auth" });
+  }, [loading, session, navigate]);
 
   const generate = useServerFn(generateCampaign);
   const mutation = useMutation({
-    mutationFn: () => generate({ data: { brandName, product, voice, persona, objective, channel } }),
+    mutationFn: () => generate({ data: { brandName, product, voice, persona, objective, channel, count } }),
     onSuccess: (res) => setVariants(res.variants),
   });
 
@@ -192,6 +200,14 @@ function Studio() {
     ? variants.reduce((a, b) => (a.relevance + a.engagement >= b.relevance + b.engagement ? a : b))
         .id
     : null;
+
+  if (loading || !session) {
+    return (
+      <div className="grid min-h-screen place-items-center">
+        <p className="text-muted-foreground">Checking your session…</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen p-3 md:p-6">
@@ -251,12 +267,31 @@ function Studio() {
               <Chips options={CHANNELS} value={channel} onChange={setChannel} />
             </Field>
 
+            <Field label="How many variants?" hint={`${count} per generation`}>
+              <div className="flex flex-wrap gap-2">
+                {[1, 2, 3, 4, 5, 6].map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => setCount(n)}
+                    className={`h-10 w-10 rounded-full text-sm font-semibold transition-colors ${
+                      count === n
+                        ? "bg-ink text-primary-foreground"
+                        : "border border-border bg-card hover:bg-secondary"
+                    }`}
+                  >
+                    {n}
+                  </button>
+                ))}
+              </div>
+            </Field>
+
             <button
               type="submit"
               disabled={mutation.isPending}
               className="w-full rounded-full bg-primary px-6 py-3 font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5 disabled:opacity-60"
             >
-              {mutation.isPending ? "Generating…" : "Generate 3 variants"}
+              {mutation.isPending ? "Generating…" : `Generate ${count} variant${count > 1 ? "s" : ""}`}
             </button>
 
             {mutation.isError ? (
@@ -273,7 +308,7 @@ function Studio() {
             {variants.length === 0 && !mutation.isPending ? (
               <div className="mt-4 grid place-items-center rounded-3xl border border-dashed border-border p-16 text-center">
                 <p className="max-w-sm text-muted-foreground">
-                  Fill in the brief on the left and Adgenix will write three persona-tuned variants
+                  Fill in the brief on the left and Adgenix will write {count} persona-tuned variant(s)
                   for <span className="font-medium text-foreground">{channel}</span>.
                 </p>
               </div>
@@ -281,7 +316,7 @@ function Studio() {
 
             {mutation.isPending ? (
               <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                {[0, 1, 2].map((i) => (
+                {Array.from({ length: count }, (_, i) => i).map((i) => (
                   <div key={i} className="h-72 animate-pulse rounded-3xl bg-secondary" />
                 ))}
               </div>
