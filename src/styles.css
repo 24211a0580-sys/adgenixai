@@ -138,3 +138,7 @@
     transform: translateX(-50%);
   }
 }
+
+@utility autosize {
+  field-sizing: content;
+}
