@@ -137,7 +137,7 @@ function VariantCard({
         value={variant.headline}
         onChange={(e) => onEdit({ headline: e.target.value })}
         rows={2}
-        className="autosize w-full resize-none rounded-xl bg-transparent font-display text-xl leading-snug font-semibold outline-none"
+        className="autosize w-full resize-none rounded-xl bg-transparent px-1 font-display text-xl leading-snug font-semibold outline-none"
       />
       <textarea
         value={variant.body}
