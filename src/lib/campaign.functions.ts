@@ -6,21 +6,29 @@ const inputSchema = z.object({
   brandName: z.string().min(1).max(120),
   product: z.string().min(1).max(2000),
   voice: z.string().max(600).default(""),
-  persona: z.string().min(1).max(200),
-  objective: z.string().min(1).max(200),
-  channel: z.string().min(1).max(60),
+  personas: z.array(z.string().min(1).max(200)).min(1).max(5),
+  objectives: z.array(z.string().min(1).max(200)).min(1).max(5),
+  channels: z.array(z.string().min(1).max(60)).min(1).max(5),
   count: z.number().int().min(1).max(6),
 });
 
 export type Variant = {
   id: string;
+  angle: string;
+  persona: string;
+  objective: string;
+  channel: string;
   headline: string;
+  subheadline: string;
   body: string;
   cta: string;
   tagline: string;
+  keyMessage: string;
+  visualDirection: string;
+  imagePrompt: string;
+  hashtags: string[];
   relevance: number;
   engagement: number;
-  angle: string;
 };
 
 export const generateCampaign = createServerFn({ method: "POST" })
@@ -30,6 +38,9 @@ export const generateCampaign = createServerFn({ method: "POST" })
     const apiKey = process.env["LOVABLE_API_KEY"];
     if (!apiKey) throw new Error("AI is not configured yet.");
 
+    const combos = data.personas.length * data.objectives.length * data.channels.length;
+    const total = Math.min(24, data.count * combos);
+
     const prompt = `You are Adgenix, a brand-aware marketing copy engine.
 
 BRAND DNA
@@ -37,13 +48,26 @@ BRAND DNA
 - Product / brief: ${data.product}
 - Tone of voice: ${data.voice || "confident, clear, human"}
 
-TARGETING
-- Customer persona: ${data.persona}
-- Campaign objective: ${data.objective}
-- Channel: ${data.channel}
+TARGETING MATRIX
+- Personas: ${data.personas.join(", ")}
+- Objectives: ${data.objectives.join(", ")}
+- Channels: ${data.channels.join(", ")}
 
-Produce exactly ${data.count} distinct A/B campaign variants for that channel, each using a different creative angle
-(e.g. emotional, value-driven, curiosity/FOMO). Respect channel conventions and length.
+Produce exactly ${total} campaign variants: ${data.count} variant(s) for EVERY combination of
+persona x objective x channel listed above. Each variant must state which persona, objective and
+channel it targets, and use a distinct creative angle (emotional, value-driven, curiosity/FOMO,
+social proof, urgency...).
+
+For each variant deliver a complete, production-ready creative package:
+- headline: the hook, respecting channel length conventions
+- subheadline: one supporting line that adds specificity
+- body: the main copy, formatted naturally for the channel
+- cta: a short button/action phrase
+- tagline: a memorable brand line
+- keyMessage: one sentence describing the core promise of this variant
+- visualDirection: art direction for the accompanying visual (subject, composition, colour, mood)
+- imagePrompt: a single-sentence prompt a designer or image model could use directly
+- hashtags: 3-5 relevant hashtags (empty array for channels where hashtags do not apply)
 Score each variant honestly from 60-98 for persona relevance and predicted engagement.
 No stereotypes, no copyrighted slogans.`;
 
@@ -71,19 +95,35 @@ No stereotypes, no copyrighted slogans.`;
                       type: "object",
                       properties: {
                         angle: { type: "string" },
+                        persona: { type: "string" },
+                        objective: { type: "string" },
+                        channel: { type: "string" },
                         headline: { type: "string" },
+                        subheadline: { type: "string" },
                         body: { type: "string" },
                         cta: { type: "string" },
                         tagline: { type: "string" },
+                        keyMessage: { type: "string" },
+                        visualDirection: { type: "string" },
+                        imagePrompt: { type: "string" },
+                        hashtags: { type: "array", items: { type: "string" } },
                         relevance: { type: "number" },
                         engagement: { type: "number" },
                       },
                       required: [
                         "angle",
+                        "persona",
+                        "objective",
+                        "channel",
                         "headline",
+                        "subheadline",
                         "body",
                         "cta",
                         "tagline",
+                        "keyMessage",
+                        "visualDirection",
+                        "imagePrompt",
+                        "hashtags",
                         "relevance",
                         "engagement",
                       ],
@@ -113,8 +153,9 @@ No stereotypes, no copyrighted slogans.`;
 
     const parsed = JSON.parse(args) as { variants: Omit<Variant, "id">[] };
     return {
-      variants: parsed.variants.slice(0, data.count).map((v, i) => ({
+      variants: parsed.variants.slice(0, total).map((v, i) => ({
         ...v,
+        hashtags: Array.isArray(v.hashtags) ? v.hashtags : [],
         relevance: Math.round(v.relevance),
         engagement: Math.round(v.engagement),
         id: `v${i + 1}`,
