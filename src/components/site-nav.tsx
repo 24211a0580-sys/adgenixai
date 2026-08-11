@@ -1,6 +1,11 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 export function SiteNav() {
+  const { session, loading } = useAuth();
+  const navigate = useNavigate();
+
   return (
     <header className="flex items-center justify-between gap-4 px-6 py-5 md:px-10">
       <Link to="/" className="flex items-center gap-2">
@@ -26,18 +31,44 @@ export function SiteNav() {
       </nav>
 
       <div className="flex items-center gap-2">
-        <Link
-          to="/studio"
-          className="rounded-full bg-card px-4 py-2 text-sm font-medium shadow-sm transition-transform hover:-translate-y-0.5"
-        >
-          Log in
-        </Link>
-        <Link
-          to="/studio"
-          className="rounded-full bg-ink px-4 py-2 text-sm font-medium text-primary-foreground transition-transform hover:-translate-y-0.5"
-        >
-          Open Studio
-        </Link>
+        {loading ? null : session ? (
+          <>
+            <span className="hidden max-w-[160px] truncate text-sm text-muted-foreground sm:block">
+              {session.user.email}
+            </span>
+            <button
+              type="button"
+              onClick={async () => {
+                await supabase.auth.signOut();
+                navigate({ to: "/" });
+              }}
+              className="rounded-full bg-card px-4 py-2 text-sm font-medium shadow-sm transition-transform hover:-translate-y-0.5"
+            >
+              Log out
+            </button>
+            <Link
+              to="/studio"
+              className="rounded-full bg-ink px-4 py-2 text-sm font-medium text-primary-foreground transition-transform hover:-translate-y-0.5"
+            >
+              Studio
+            </Link>
+          </>
+        ) : (
+          <>
+            <Link
+              to="/auth"
+              className="rounded-full bg-card px-4 py-2 text-sm font-medium shadow-sm transition-transform hover:-translate-y-0.5"
+            >
+              Log in
+            </Link>
+            <Link
+              to="/auth"
+              className="rounded-full bg-ink px-4 py-2 text-sm font-medium text-primary-foreground transition-transform hover:-translate-y-0.5"
+            >
+              Sign up
+            </Link>
+          </>
+        )}
       </div>
     </header>
   );
