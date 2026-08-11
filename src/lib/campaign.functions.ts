@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const inputSchema = z.object({
   brandName: z.string().min(1).max(120),
@@ -8,6 +9,7 @@ const inputSchema = z.object({
   persona: z.string().min(1).max(200),
   objective: z.string().min(1).max(200),
   channel: z.string().min(1).max(60),
+  count: z.number().int().min(1).max(6),
 });
 
 export type Variant = {
@@ -22,6 +24,7 @@ export type Variant = {
 };
 
 export const generateCampaign = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => inputSchema.parse(d))
   .handler(async ({ data }): Promise<{ variants: Variant[] }> => {
     const apiKey = process.env["LOVABLE_API_KEY"];
@@ -39,7 +42,7 @@ TARGETING
 - Campaign objective: ${data.objective}
 - Channel: ${data.channel}
 
-Produce exactly 3 distinct A/B campaign variants for that channel, each using a different creative angle
+Produce exactly ${data.count} distinct A/B campaign variants for that channel, each using a different creative angle
 (e.g. emotional, value-driven, curiosity/FOMO). Respect channel conventions and length.
 Score each variant honestly from 60-98 for persona relevance and predicted engagement.
 No stereotypes, no copyrighted slogans.`;
@@ -110,7 +113,7 @@ No stereotypes, no copyrighted slogans.`;
 
     const parsed = JSON.parse(args) as { variants: Omit<Variant, "id">[] };
     return {
-      variants: parsed.variants.slice(0, 3).map((v, i) => ({
+      variants: parsed.variants.slice(0, data.count).map((v, i) => ({
         ...v,
         relevance: Math.round(v.relevance),
         engagement: Math.round(v.engagement),
