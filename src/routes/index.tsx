@@ -73,10 +73,10 @@ const steps = [
 ];
 
 const personas = [
-  { emoji: "🎓", name: "Students", note: "Price-first, meme-fluent, short attention" },
-  { emoji: "💼", name: "Working professionals", note: "Time-saving, credibility, ROI" },
-  { emoji: "💎", name: "Premium customers", note: "Craft, exclusivity, restraint" },
-  { emoji: "🚀", name: "Early adopters", note: "Novelty, capability, being first" },
+  { emoji: "bg-primary", name: "Students", note: "Price-first, meme-fluent, short attention" },
+  { emoji: "bg-sun", name: "Working professionals", note: "Time-saving, credibility, ROI" },
+  { emoji: "bg-ink", name: "Premium customers", note: "Craft, exclusivity, restraint" },
+  { emoji: "bg-lime", name: "Early adopters", note: "Novelty, capability, being first" },
 ];
 
 const channels = [
@@ -108,7 +108,7 @@ function Index() {
             <span className="hand absolute -top-2 -left-2 hidden -rotate-12 md:block">
               on-brand, always ↘
             </span>
-            <span className="hand absolute -right-4 bottom-0 hidden rotate-12 md:block">
+            <span className="hand absolute -right-14 -bottom-10 hidden rotate-12 md:block">
               3 variants, scored
             </span>
           </div>
@@ -161,7 +161,7 @@ function Index() {
                 key={p.name}
                 className="rounded-2xl border border-border bg-card p-5 transition-transform hover:-translate-y-1"
               >
-                <span className="text-2xl">{p.emoji}</span>
+                <span className={`block h-3 w-3 rounded-full ${p.emoji}`} />
                 <h3 className="mt-2 font-semibold">{p.name}</h3>
                 <p className="mt-1 text-sm text-muted-foreground">{p.note}</p>
               </div>
