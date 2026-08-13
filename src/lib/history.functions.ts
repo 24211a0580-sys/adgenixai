@@ -73,8 +73,8 @@ export const saveCampaign = createServerFn({ method: "POST" })
         channels: data.channels,
         variation_types: data.variationTypes,
         variant_count: data.count,
-        variants: data.variants,
-        carousels: data.carousels,
+        variants: data.variants as unknown as never,
+        carousels: data.carousels as unknown as never,
       })
       .select("id")
       .single();
