@@ -14,7 +14,95 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      brands: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          product: string
+          updated_at: string
+          user_id: string
+          voice: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          product: string
+          updated_at?: string
+          user_id: string
+          voice?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          product?: string
+          updated_at?: string
+          user_id?: string
+          voice?: string
+        }
+        Relationships: []
+      }
+      campaigns: {
+        Row: {
+          brand_id: string | null
+          brand_name: string
+          carousels: Json
+          channels: string[]
+          created_at: string
+          id: string
+          objectives: string[]
+          personas: string[]
+          product: string
+          user_id: string
+          variant_count: number
+          variants: Json
+          variation_types: string[]
+          voice: string
+        }
+        Insert: {
+          brand_id?: string | null
+          brand_name: string
+          carousels?: Json
+          channels?: string[]
+          created_at?: string
+          id?: string
+          objectives?: string[]
+          personas?: string[]
+          product: string
+          user_id: string
+          variant_count?: number
+          variants?: Json
+          variation_types?: string[]
+          voice?: string
+        }
+        Update: {
+          brand_id?: string | null
+          brand_name?: string
+          carousels?: Json
+          channels?: string[]
+          created_at?: string
+          id?: string
+          objectives?: string[]
+          personas?: string[]
+          product?: string
+          user_id?: string
+          variant_count?: number
+          variants?: Json
+          variation_types?: string[]
+          voice?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
